@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import AgoraRTC from "agora-rtc-sdk-ng"
 import { GlobalProvider, useClient, useStart, useUsers, useSpeaking } from './GlobalContext';
 import Pizzicato from 'pizzicato'
-
+import PitchShift from 'soundbank-pitch-shift'
 const App = () => {
   return (
     <GlobalProvider>
@@ -24,24 +24,16 @@ const Content = () => {
     token: null,
   };
 
-  const modifyGain = (stream, gainValue) => {
-    var ctx = new AudioContext();
-    var src = ctx.createMediaStreamSource(stream);
-    var dst = ctx.createMediaStreamDestination();
-    var gainNode = ctx.createGain();
-    gainNode.gain.value = gainValue;
-    [src, gainNode, dst].reduce((a, b) => a && a.connect(b));
-    return dst.stream;
-  };
 
   let init = async (name, appId) => {
     rtc.current.client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
     initClientEvents()
-    const uid = await rtc.current.client.join(appId, name, options.token, null);
+    const uid = await rtc.current.client.join('947be50f01ff492d819d6c50a2cae705', name, options.token, null);
     // Create an audio track from the audio sampled by a microphone.
     let option = true
+
+    // sawtoothWave.play();
     if (option === true) {
-      //You can manipulate the audioTrack here
       Pizzicato.context.resume()
       Pizzicato.masterGainNode.disconnect(Pizzicato.context.destination);
       const dest = Pizzicato.context.createMediaStreamDestination();
@@ -51,16 +43,76 @@ const Content = () => {
       Pizzicato.context.resume()
       var voice = new Pizzicato.Sound({
         source: 'input',
-        options: { volume: 0.8 }
+        options: { volume: 1 }
       }, function () {
+        //delay
+        // var delay = new Pizzicato.Effects.Delay({
+        //   feedback: 0.6,
+        //   time: 0.4,
+        //   mix: 0.5
+        // });
+        // voice.addEffect(delay);
+        // voice.play();
+
+        // var pingPongDelay = new Pizzicato.Effects.PingPongDelay({
+        //   feedback: 0.6,
+        //   time: 0.4,
+        //   mix: 0.5
+        // });
+
+        // voice.addEffect(pingPongDelay);
+        // voice.play();
+
+        // var distortion = new Pizzicato.Effects.Distortion({
+        //   gain: 0.4
+        // });
+
+        // voice.addEffect(distortion);
+        // voice.play();
+
+        // var quadrafuzz = new Pizzicato.Effects.Quadrafuzz({
+        //   lowGain: 0.6,
+        //   midLowGain: 0.8,
+        //   midHighGain: 0.5,
+        //   highGain: 0.6,
+        //   mix: 1.0
+        // });
+
+        // voice.addEffect(quadrafuzz);
+        // voice.play();
+
+        // var reverb = new Pizzicato.Effects.Reverb({
+        //   time: 0.01,
+        //   decay: 0.01,
+        //   reverse: false,
+        //   mix: 0.5
+        // });
+
+        // voice.addEffect(reverb);
+        // voice.play();
+
+        // var lowPassFilter = new Pizzicato.Effects.LowPassFilter({
+        //   frequency: 200,
+        //   peak: 10
+        // });
+
+        // voice.addEffect(lowPassFilter);
+
         voice.play();
+        var pitch = PitchShift(Pizzicato.context)
+        pitch.connect(Pizzicato.context.destination)
+        // pitch.transpose = 12
+        pitch.transpose = 0.3
+        // pitch.wet.value = 0.6
+        // pitch.dry.value = 0.6
+        voice.sourceNode.connect(pitch)
+        // setInterval(function () {
+        //   var source = Pizzicato.context.createOscillator()
+        //   source.connect(pitchShift)
+        //   source.start()
+        //   source.stop(audioContext.currentTime + 0.5)
+        // }, 2000)
       });
-      // var sound = new Pizzicato.Sound({
-      //   source: 'wave',
-      //   options: { type: 'sawtooth', frequency: 440, detached: false }
-      // });
-      // sound.play()
-      // sound.connect()
     }
     else {
       //Agora provided audio manipulation
